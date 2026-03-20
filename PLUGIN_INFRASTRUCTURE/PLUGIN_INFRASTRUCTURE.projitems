@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>A1B2C3D4-E5F6-47A8-9B8C-7D6E5F4A3B2C</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>PluginInfrastructure</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Infrastructure\PluginContainer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Plugins\PluginBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\BaseService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Rules\RuleEngine.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataversePluginFramework", "DataversePluginFramework\DataversePluginFramework.csproj", "{A27B6E92-839E-4E05-BBFA-75937EC36226}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MODEL", "MODEL\MODEL.shproj", "{59856C07-27B8-4BD9-948B-7382BF987EFE}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PLUGIN_INFRASTRUCTURE", "PLUGIN_INFRASTRUCTURE\PLUGIN_INFRASTRUCTURE.shproj", "{B2C3D4E5-F6A7-48B9-8C7D-6E5F4A3B2C1D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A27B6E92-839E-4E05-BBFA-75937EC36226}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A27B6E92-839E-4E05-BBFA-75937EC36226}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A27B6E92-839E-4E05-BBFA-75937EC36226}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A27B6E92-839E-4E05-BBFA-75937EC36226}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7A54D937-6027-4AE9-8055-CEF93C6BF227}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		MODEL\MODEL.projitems*{59856c07-27b8-4bd9-948b-7382bf987efe}*SharedItemsImports = 13
+		MODEL\MODEL.projitems*{a27b6e92-839e-4e05-bbfa-75937ec36226}*SharedItemsImports = 4
+		PLUGIN_INFRASTRUCTURE\PLUGIN_INFRASTRUCTURE.projitems*{a27b6e92-839e-4e05-bbfa-75937ec36226}*SharedItemsImports = 4
+		PLUGIN_INFRASTRUCTURE\PLUGIN_INFRASTRUCTURE.projitems*{b2c3d4e5-f6a7-48b9-8c7d-6e5f4a3b2c1d}*SharedItemsImports = 13
+	EndGlobalSection
+EndGlobal
