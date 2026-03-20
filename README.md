@@ -522,7 +522,6 @@ public class AccountServiceTests
 | Microsoft.CrmSdk.CoreAssemblies | 9.0.2.51 | Dataverse SDK |
 | Microsoft.CrmSdk.Workflow | 9.0.2.42 | Workflow integration |
 | Microsoft.CrmSdk.XrmTooling.CoreAssembly | 9.1.1.65 | XrmTooling services |
-| Newtonsoft.Json | 13.0.1 | JSON serialization |
 
 ---
 
