@@ -670,3 +670,14 @@ public class AccountServiceTests
 **⭐ If you find this framework helpful, consider starring the repository!**
 
 *Last Updated: March 2026 | Framework Version: 2.0*
+
+## ⚠️ Disclaimer
+
+This repository is a private project.
+
+It is provided without any warranty, guarantee, or representation of any kind.
+Use is entirely at your own risk. The author accepts no liability for direct or
+indirect damages, data loss, outages, or any other consequences resulting from
+the use of this project.
+
+---
