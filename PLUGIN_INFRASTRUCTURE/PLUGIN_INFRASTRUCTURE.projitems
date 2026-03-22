@@ -9,6 +9,7 @@
     <Import_RootNamespace>PluginInfrastructure</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Constants\PluginConstants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Infrastructure\PluginContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Plugins\PluginBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\BaseService.cs" />

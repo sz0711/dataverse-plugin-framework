@@ -89,7 +89,7 @@ namespace PluginInfrastructure.Plugins
             catch (Exception ex)
             {
                 var tracing = (ITracingService)serviceProvider.GetService(typeof(ITracingService));
-                tracing?.Trace($"PluginBase Error: {ex}");
+                tracing?.Trace($"[{GetType().Name}] PluginBase.Execute FATAL: {ex}");
                 throw;
             }
         }
@@ -110,16 +110,20 @@ namespace PluginInfrastructure.Plugins
         /// </summary>
         private void RouteExecution()
         {
-            // PluginStage: PreOperation = 10, PostOperation = 40
-            const int PreOperation = 10;
+            // PluginStage: PreValidation = 10, PreOperation = 20, PostOperation = 40
+            const int PreValidation = 10;
+            const int PreOperation = 20;
             const int PostOperation = 40;
 
-            Tracing.Trace($"{GetType().Name}: {Context.MessageName} - Stage: {Context.Stage}");
+            var entityId = CurrentRecord?.Id;
+            var correlationId = Context.CorrelationId;
+            Tracing.Trace($"[{GetType().Name}] Start: {Context.MessageName} | Stage={Context.Stage} | Entity={entityId} | Correlation={correlationId}");
 
             try
             {
                 switch (Context.Stage)
                 {
+                    case PreValidation:
                     case PreOperation:
                         RoutePreOperation();
                         break;
@@ -133,11 +137,11 @@ namespace PluginInfrastructure.Plugins
                         break;
                 }
 
-                Tracing.Trace($"{GetType().Name}: Execution completed successfully");
+                Tracing.Trace($"[{GetType().Name}] Completed: {Context.MessageName} | Stage={Context.Stage}");
             }
             catch (Exception ex)
             {
-                Tracing.Trace($"{GetType().Name} Error: {ex}");
+                Tracing.Trace($"[{GetType().Name}] Error in {Context.MessageName} Stage={Context.Stage}: {ex}");
                 throw;
             }
         }

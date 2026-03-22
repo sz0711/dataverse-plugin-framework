@@ -1,6 +1,8 @@
+using System;
 using Microsoft.Xrm.Sdk;
 using MODEL;
 using DataversePluginFramework.Services.Risk;
+using PluginInfrastructure.Constants;
 using PluginInfrastructure.Services;
 
 namespace DataversePluginFramework.Services.AccountServices
@@ -25,28 +27,41 @@ namespace DataversePluginFramework.Services.AccountServices
 
         /// <summary>
         /// Process account and evaluate if it's a strategic customer.
-        /// If Revenue > 5,000,000, account is marked as "Strategic Customer".
+        /// If Revenue > threshold, account is marked as strategic and risk is evaluated.
         /// </summary>
         public void Process(Account account)
         {
-            if (account?.Revenue == null)
+            if (account == null)
             {
-                Trace.Trace("Account has no revenue data.");
+                Trace.Trace("AccountService: Account is null, skipping processing.");
                 return;
             }
 
-            if (account.Revenue.Value > 5000000)
+            if (account.Revenue == null)
             {
-                account.Description = "Strategic Customer";
+                Trace.Trace($"AccountService: Account '{account.Name ?? account.Id.ToString()}' has no revenue data.");
+                return;
+            }
 
-                Trace.Trace($"Strategic account detected: {account.Name} with revenue {account.Revenue.Value}");
+            if (account.Revenue.Value > PluginConstants.StrategicRevenueThreshold)
+            {
+                account.Description = PluginConstants.StrategicCustomerDescription;
 
-                // Delegate risk evaluation to the RiskService
-                _risk.Evaluate(account);
+                Trace.Trace($"AccountService: Strategic account detected: {account.Name} with revenue {account.Revenue.Value}");
+
+                try
+                {
+                    _risk.Evaluate(account);
+                }
+                catch (Exception ex)
+                {
+                    Trace.Trace($"AccountService: Risk evaluation failed for account '{account.Name}': {ex.Message}");
+                    // Risk evaluation is non-critical; account processing continues.
+                }
             }
             else
             {
-                Trace.Trace($"Account {account.Name} is not strategic. Revenue: {account.Revenue.Value}");
+                Trace.Trace($"AccountService: Account '{account.Name}' is not strategic. Revenue: {account.Revenue.Value}");
             }
         }
     }

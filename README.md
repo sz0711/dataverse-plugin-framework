@@ -31,13 +31,15 @@ This is a comprehensive, extensible framework designed to solve real-world plugi
 ## Key Features
 
 ✨ **Architecture Excellence**
-- 🔧 **Generic Plugin Base Class** with early binding and type safety
-- 🏗️ **Lightweight IoC Container** with constructor-based dependency injection
+- 🔧 **Generic Plugin Base Class** with early binding, type safety, and correlation tracing
+- 🏗️ **Lightweight IoC Container** with greedy constructor injection, instance caching, and clear error messages
 - 🎯 **Service-Oriented Architecture** with clean separation of concerns
 - ⚙️ **Delegate-Based Rule Engine** for flexible business logic composition
+- 🔒 **Centralized Constants** eliminating magic values across services
 - ✅ **SOLID Principles** applied throughout the codebase
 - 📦 **Reusable Shared Projects** for infrastructure and models
-- 🛡️ **Thread-Safe** and production-tested patterns
+- 🧪 **14 Unit Tests** (xUnit + Moq) covering services and infrastructure
+- 🛡️ **Resilient Error Handling** with non-critical operation isolation
 
 ---
 
@@ -65,6 +67,7 @@ This is a comprehensive, extensible framework designed to solve real-world plugi
 │    │    PluginBase<T>                        │           │
 │    │    - Template Method Pattern            │           │
 │    │    - Event routing (Pre/Post)           │           │
+│    │    - Correlation tracing                │           │
 │    │    - Service initialization             │           │
 │    └────────────┬───────────────────────────┘           │
 └─────────────────┼────────────────────────────────────────┘
@@ -74,7 +77,8 @@ This is a comprehensive, extensible framework designed to solve real-world plugi
 │    ┌────────────────────────────────────────┐           │
 │    │    PluginContainer (IoC)                │           │
 │    │    - Service registration               │           │
-│    │    - Constructor injection              │           │
+│    │    - Greedy constructor injection       │           │
+│    │    - Instance & constructor caching     │           │
 │    │    - Dependency resolution              │           │
 │    └────────────┬───────────────────────────┘           │
 └─────────────────┼────────────────────────────────────────┘
@@ -82,14 +86,14 @@ This is a comprehensive, extensible framework designed to solve real-world plugi
         ┌──────────┼──────────┐
         │          │          │
 ┌───────▼───┐  ┌──▼──────┐  ┌▼──────────┐
-│  Services │  │Services │  │ Rule      │
-│   Layer   │  │ Config   │  │ Engine    │
+│  Services │  │Constants│  │ Rule      │
+│   Layer   │  │& Config │  │ Engine    │
 │           │  │          │  │           │
-│•IAccount- │  │•Service- │  │•Rule<T>  │
-│  Service  │  │  Regist- │  │•Evaluate │
-│•IRisk-    │  │  ration  │  │  All/Any │
-│  Service  │  │•DI Setup │  │           │
-│•BaseService   │          │  │           │
+│•IAccount- │  │•Plugin-  │  │•Rule<T>  │
+│  Service  │  │ Constants│  │•Evaluate │
+│•IRisk-    │  │•Service- │  │  All/Any │
+│  Service  │  │  Regist- │  │           │
+│•BaseService│ │  ration  │  │           │
 └───────────┘  └─────────┘  └───────────┘
 ```
 
@@ -97,11 +101,11 @@ This is a comprehensive, extensible framework designed to solve real-world plugi
 
 ```
 DataversePluginFramework.sln
-├── DataversePluginFramework/              [Domain-Specific Plugin]
+├── DataversePluginFramework/              [Domain-Specific Plugin Assembly]
 │   ├── Plugins/
 │   │   └── AccountPlugin.cs              ← Plugin entry point
 │   ├── Infrastructure/
-│   │   └── ServiceRegistration.cs        ← Centralized DI
+│   │   └── ServiceRegistration.cs        ← Centralized DI configuration
 │   ├── Services/
 │   │   ├── AccountServices/
 │   │   │   ├── IAccountService.cs
@@ -112,12 +116,26 @@ DataversePluginFramework.sln
 │   └── Properties/
 │       └── AssemblyInfo.cs
 │
-├── MODEL/                [Shared - Early-Bound Models]
-└── PLUGIN_INFRASTRUCTURE/[Shared - Reusable Framework]
-    ├── Infrastructure/PluginContainer.cs
-    ├── Plugins/PluginBase.cs
-    ├── Services/BaseService.cs
-    └── Rules/RuleEngine.cs
+├── DataversePluginFramework.Tests/        [Unit Test Project]
+│   ├── Services/
+│   │   ├── AccountServiceTests.cs        ← 6 tests
+│   │   └── RiskServiceTests.cs           ← 4 tests
+│   └── Infrastructure/
+│       └── PluginContainerTests.cs        ← 4 tests
+│
+├── MODEL/                                 [Shared - Early-Bound Models]
+│   └── Model/
+│       ├── Entities/ (account.cs, contact.cs)
+│       ├── OptionSets/
+│       ├── OrgContext.cs
+│       └── EntityOptionSetEnum.cs
+│
+└── PLUGIN_INFRASTRUCTURE/                 [Shared - Reusable Framework]
+    ├── Constants/PluginConstants.cs        ← Centralized business constants
+    ├── Infrastructure/PluginContainer.cs   ← IoC container
+    ├── Plugins/PluginBase.cs              ← Generic plugin base
+    ├── Services/BaseService.cs            ← Service foundation
+    └── Rules/RuleEngine.cs               ← Composable rule engine
 ```
 
 ---
@@ -128,6 +146,8 @@ DataversePluginFramework.sln
 
 **Rule:** If Account Revenue > €5,000,000 → Mark as "Strategic Customer"
 
+The threshold and description label are centralized in `PluginConstants` to avoid magic values.
+
 ### Execution Flow
 
 ```
@@ -135,48 +155,68 @@ Dataverse Event (Account Create/Update)
     ↓
 AccountPlugin.Execute()
     ↓
-PluginBase<Account>.InitializeServices()
+PluginBase<Account>
+    ├── Initialize SDK services
+    ├── Log: [AccountPlugin] Start: Create | Stage=20 | Entity=... | Correlation=...
+    └── Route → OnPreOperationCreate()
     ↓
 PluginContainer Setup (IoC)
     │
-    ├── Register IOrganizationService
-    ├── Register ITracingService
-    ├── Register IAccountService → AccountService
-    └── Register IRiskService → RiskService
+    ├── RegisterInstance: IOrganizationService
+    ├── RegisterInstance: ITracingService
+    ├── Register: IAccountService → AccountService
+    └── Register: IRiskService → RiskService
     ↓
 AccountService.Process(Account)
-    ├── Evaluate: Revenue > €5,000,000?
-    ├── Set: Description = "Strategic Customer"
-    └── Delegate: RiskService.Evaluate(account)
+    ├── Guard: null account / null revenue → trace & return
+    ├── Evaluate: Revenue > PluginConstants.StrategicRevenueThreshold?
+    ├── Set: Description = PluginConstants.StrategicCustomerDescription
+    └── try { RiskService.Evaluate(account) }
+        catch { trace warning, continue }   ← non-critical
 ```
 
 ---
 
 ## Core Components
 
-### 1️⃣ PluginBase<T> - Generic Plugin Framework
+### 1️⃣ PluginBase\<T\> - Generic Plugin Framework
 
 **Location:** `PLUGIN_INFRASTRUCTURE/Plugins/PluginBase.cs`
 
 A strongly-typed, template method-based plugin base class supporting any entity type.
 
 **Features:**
-- 🔄 **Template Method Pattern** for event routing (Pre/Post, Create/Update/Delete)
+- 🔄 **Template Method Pattern** for event routing (PreValidation/PreOperation/PostOperation × Create/Update/Delete)
 - 🎯 **Generic Type Safety** via `PluginBase<T> where T : Entity`
 - 📦 **Automatic SDK Service Initialization** (ExecutionContext, OrgService, TracingService)
 - 🔗 **IoC Container Integration** for service resolution
-- 🛡️ **Comprehensive Exception Handling** with tracing
+- 📊 **Correlation Tracing** — every execution logs `PluginName`, `MessageName`, `Stage`, `EntityId`, and `CorrelationId`
+- 🛡️ **Two-Level Exception Handling** — route-level catch with context info + top-level FATAL catch
 
-**Key Properties:**
+**Key Properties & Methods:**
 ```csharp
 protected PluginContainer Container { get; }           // IoC container
 protected IPluginExecutionContext Context { get; }     // Execution context
 protected ITracingService Tracing { get; }             // Tracing service
 protected T CurrentRecord { get; }                      // Strongly-typed entity
 
+// Event handlers (override in derived plugins)
 protected virtual void OnPreOperationCreate() { }
 protected virtual void OnPreOperationUpdate() { }
+protected virtual void OnPreOperationDelete() { }
 protected virtual void OnPostOperationCreate() { }
+protected virtual void OnPostOperationUpdate() { }
+protected virtual void OnPostOperationDelete() { }
+
+// Service registration hook (Template Method)
+protected virtual void RegisterDomainServices(PluginContainer container) { }
+```
+
+**Tracing Output:**
+```
+[AccountPlugin] Start: Create | Stage=20 | Entity=a1b2c3d4-... | Correlation=e5f6a7b8-...
+[AccountPlugin] Error in Create Stage=20: System.InvalidOperationException: ...
+[AccountPlugin] PluginBase.Execute FATAL: System.Exception: ...
 ```
 
 ---
@@ -189,20 +229,42 @@ A simple, efficient dependency injection container without external dependencies
 
 **Features:**
 - ✅ No external dependencies
-- ✅ Constructor-based injection with automatic resolution
-- ✅ Circular dependency detection
-- ✅ Singleton instance caching
-- ✅ Fallback to IServiceProvider for SDK services
+- ✅ **Greedy constructor selection** — picks the constructor with the most parameters
+- ✅ **Constructor caching** — `ConstructorInfo` resolved once per type via `_ctorCache`
+- ✅ **Instance caching** — resolved services are cached for the plugin execution lifetime
+- ✅ **Descriptive error messages** — on resolution failure, logs parameter name, type, and target
+- ✅ Fallback to `IServiceProvider` for SDK services
 
 ```csharp
 container.Register<IAccountService, AccountService>();
 container.RegisterInstance<IOrganizationService>(orgService);
+
 var service = container.Resolve<IAccountService>();
+// → Greedy ctor: selects AccountService(IOrganizationService, ITracingService, IRiskService)
+// → Resolved instance is cached for subsequent Resolve<IAccountService>() calls
 ```
 
 ---
 
-### 3️⃣ BaseService - Service Foundation
+### 3️⃣ PluginConstants - Centralized Business Constants
+
+**Location:** `PLUGIN_INFRASTRUCTURE/Constants/PluginConstants.cs`
+
+Single source of truth for magic values used across services.
+
+```csharp
+public static class PluginConstants
+{
+    public const decimal StrategicRevenueThreshold = 5_000_000m;
+    public const string StrategicCustomerDescription = "Strategic Customer";
+}
+```
+
+All services reference these constants instead of hard-coded values, making threshold changes a one-line edit.
+
+---
+
+### 4️⃣ BaseService - Service Foundation
 
 **Location:** `PLUGIN_INFRASTRUCTURE/Services/BaseService.cs`
 
@@ -222,7 +284,7 @@ public abstract class BaseService
 
 ---
 
-### 4️⃣ RuleEngine<T> - Composable Business Rules
+### 5️⃣ RuleEngine\<T\> - Composable Business Rules
 
 **Location:** `PLUGIN_INFRASTRUCTURE/Rules/RuleEngine.cs`
 
@@ -243,13 +305,13 @@ public class RuleEngine<T> where T : Entity
 ```csharp
 var engine = new RuleEngine<Account>();
 RuleEngine<Account>.Rule isStrategic = 
-    account => account.Revenue?.Value > 5000000;
+    account => account.Revenue?.Value > PluginConstants.StrategicRevenueThreshold;
 bool result = engine.Evaluate(account, isStrategic);
 ```
 
 ---
 
-### 5️⃣ ServiceRegistration - Centralized DI Configuration
+### 6️⃣ ServiceRegistration - Centralized DI Configuration
 
 **Location:** `DataversePluginFramework/Infrastructure/ServiceRegistration.cs`
 
@@ -268,21 +330,33 @@ public static class ServiceRegistration
 
 ---
 
-### 6️⃣ AccountService & RiskService - Business Logic
+### 7️⃣ AccountService & RiskService - Business Logic
 
-**AccountService:** Evaluates account revenue and delegates risk assessment.
+**AccountService:** Evaluates account revenue, applies strategic classification, and delegates risk assessment with resilient error handling.
 
 ```csharp
 public class AccountService : BaseService, IAccountService
 {
-    private readonly IRiskService _riskService;
+    private readonly IRiskService _risk;
 
     public void Process(Account account)
     {
-        if (account.Revenue?.Value > 5000000)
+        if (account == null) { Trace.Trace("..."); return; }
+        if (account.Revenue == null) { Trace.Trace("..."); return; }
+
+        if (account.Revenue.Value > PluginConstants.StrategicRevenueThreshold)
         {
-            account.Description = "Strategic Customer";
-            _riskService.Evaluate(account);
+            account.Description = PluginConstants.StrategicCustomerDescription;
+
+            try
+            {
+                _risk.Evaluate(account);
+            }
+            catch (Exception ex)
+            {
+                Trace.Trace($"AccountService: Risk evaluation failed: {ex.Message}");
+                // Risk evaluation is non-critical; processing continues.
+            }
         }
     }
 }
@@ -295,7 +369,12 @@ public class RiskService : BaseService, IRiskService
 {
     public void Evaluate(Account account)
     {
-        Trace.Trace($"Evaluating risk for account: {account.Name}");
+        if (account == null) return;
+
+        if (account.Revenue?.Value > PluginConstants.StrategicRevenueThreshold)
+        {
+            Trace.Trace($"High-value account risk assessment: {account.Name}");
+        }
     }
 }
 ```
@@ -305,26 +384,37 @@ public class RiskService : BaseService, IRiskService
 ## Getting Started
 
 ### Prerequisites
-- ✅ Visual Studio 2019+
+- ✅ Visual Studio 2019+ (2022 recommended)
 - ✅ .NET Framework 4.6.2
 - ✅ Microsoft Dataverse SDK (CRM SDK) 9.0.2+
 
 ### Quick Start
 
-#### 1. Clone/Extract the Project
+#### 1. Clone the Repository
 ```bash
 git clone https://github.com/yourusername/DataversePluginFramework.git
 cd DataversePluginFramework
 ```
 
-#### 2. Build the Plugin Assembly
+#### 2. Restore & Build
 ```bash
-dotnet build DataversePluginFramework.sln -c Release
+nuget restore DataversePluginFramework.sln
+msbuild DataversePluginFramework.sln -verbosity:minimal
 ```
 
-The compiled plugin will be: `bin/Release/DataversePluginFramework.dll`
+> **Note:** This is a .NET Framework 4.6.2 solution using `packages.config`. Use `nuget.exe` + MSBuild (not `dotnet build`).
 
-#### 3. Deploy to Dataverse
+The compiled plugin assembly: `DataversePluginFramework\bin\Debug\DataversePluginFramework.dll`
+
+#### 3. Run Tests
+```bash
+vstest.console.exe DataversePluginFramework.Tests\bin\Debug\DataversePluginFramework.Tests.dll ^
+  /TestAdapterPath:packages\xunit.runner.visualstudio.2.8.2\build\net462
+```
+
+Expected: **14 tests passed** (6 AccountService + 4 RiskService + 4 PluginContainer).
+
+#### 4. Deploy to Dataverse
 
 Use the **Plugin Registration Tool**:
 1. Assembly: `DataversePluginFramework.dll`
@@ -348,6 +438,9 @@ public interface IMyService
 
 public class MyService : BaseService, IMyService
 {
+    public MyService(IOrganizationService svc, ITracingService trace)
+        : base(svc, trace) { }
+
     public void Execute(MyEntity entity)
     {
         Trace.Trace($"Processing: {entity.Name}");
@@ -357,6 +450,7 @@ public class MyService : BaseService, IMyService
 
 **Step 2: Register Service**
 ```csharp
+// In ServiceRegistration.cs
 container.Register<IMyService, MyService>();
 ```
 
@@ -364,6 +458,11 @@ container.Register<IMyService, MyService>();
 ```csharp
 public class MyPlugin : PluginBase<MyEntity>
 {
+    protected override void RegisterDomainServices(PluginContainer container)
+    {
+        ServiceRegistration.RegisterServices(container);
+    }
+
     protected override void OnPreOperationCreate()
     {
         var service = Container.Resolve<IMyService>();
@@ -377,16 +476,16 @@ public class MyPlugin : PluginBase<MyEntity>
 ## Design Patterns
 
 ### 1. Template Method Pattern
-The `PluginBase<T>` class enforces a standard execution flow while allowing derived classes to customize specific steps.
+The `PluginBase<T>` class enforces a standard execution flow while allowing derived classes to customize specific steps via `OnPreOperationCreate()`, `OnPostOperationUpdate()`, etc.
 
 ### 2. Dependency Injection
-Services registered in `ServiceRegistration.cs` are resolved through the IoC container, promoting loose coupling and testability.
+Services registered in `ServiceRegistration.cs` are resolved through the IoC container, promoting loose coupling and testability. The container uses a **greedy constructor** strategy for automatic resolution.
 
 ### 3. Strategy Pattern (via RuleEngine)
 Business rules as delegate strategies enable flexible rule composition without inheritance hierarchies.
 
 ### 4. Singleton Pattern
-The IoC container manages singleton instances of services, ensuring consistent state across execution.
+The IoC container caches resolved instances, ensuring consistent state across a single plugin execution.
 
 ---
 
@@ -394,10 +493,13 @@ The IoC container manages singleton instances of services, ensuring consistent s
 
 ### ✅ DO
 
-**Clear, Intent-Revealing Service Names:**
+**Use Centralized Constants:**
 ```csharp
-public interface IAccountValidationService { }
-public interface IRevenueCalculationService { }
+// PluginConstants.cs — single source of truth
+if (account.Revenue.Value > PluginConstants.StrategicRevenueThreshold)
+{
+    account.Description = PluginConstants.StrategicCustomerDescription;
+}
 ```
 
 **Constructor Injection:**
@@ -413,21 +515,28 @@ public class AccountService : BaseService
         : base(svc, trace)
 ```
 
-**Comprehensive Tracing:**
+**Isolate Non-Critical Operations:**
 ```csharp
-Trace.Trace($"Processing account: {account.Name}");
-if (account.Revenue?.Value > 5000000)
+try { _risk.Evaluate(account); }
+catch (Exception ex)
 {
-    Trace.Trace("  → High revenue account marked as strategic");
+    Trace.Trace($"Risk evaluation failed: {ex.Message}");
+    // Continue — risk is non-critical
 }
+```
+
+**Comprehensive Tracing (with context):**
+```csharp
+Trace.Trace($"AccountService: Strategic account detected: {account.Name} with revenue {account.Revenue.Value}");
 ```
 
 ### ❌ DON'T
 
-**Vague Names:**
+**Hard-Code Magic Values:**
 ```csharp
-public interface IService1 { }
-public interface IHelper { }
+// BAD — scattered magic values are unmaintainable
+if (account.Revenue?.Value > 5000000)
+    account.Description = "Strategic Customer";
 ```
 
 **Hidden Dependencies:**
@@ -440,7 +549,7 @@ public void SetRisk(IRiskService risk) // Property injection is bad
 
 **Skip Tracing:**
 ```csharp
-// No logging at all - impossible to debug in production!
+// No logging at all — impossible to debug in production!
 account.Description = "Strategic Customer";
 ```
 
@@ -448,55 +557,67 @@ account.Description = "Strategic Customer";
 
 ## Testing
 
-The framework's design supports comprehensive unit testing:
+The solution includes a dedicated test project (`DataversePluginFramework.Tests`) with **14 xUnit tests** covering all service and infrastructure logic.
+
+### Test Overview
+
+| Test Class | Tests | Covers |
+|------------|-------|--------|
+| `AccountServiceTests` | 6 | Null handling, revenue thresholds, strategic marking, risk isolation |
+| `RiskServiceTests` | 4 | Null handling, revenue-based tracing |
+| `PluginContainerTests` | 4 | Instance registration, constructor DI, fallback, null resolution |
+
+### Example: AccountService Tests
 
 ```csharp
-[TestClass]
 public class AccountServiceTests
 {
-    [TestMethod]
-    public void Process_WithHighRevenue_MarksAsStrategic()
+    private readonly Mock<IOrganizationService> _orgService;
+    private readonly Mock<ITracingService> _tracing;
+    private readonly Mock<IRiskService> _riskService;
+    private readonly AccountService _sut;
+
+    public AccountServiceTests()
     {
-        // Arrange
-        var mockOrgService = new Mock<IOrganizationService>();
-        var mockTracingService = new Mock<ITracingService>();
-        var mockRiskService = new Mock<IRiskService>();
-        
-        var account = new Account { Revenue = new Money(6000000) };
-        var service = new AccountService(
-            mockOrgService.Object,
-            mockTracingService.Object,
-            mockRiskService.Object);
-        
-        // Act
-        service.Process(account);
-        
-        // Assert
-        Assert.AreEqual("Strategic Customer", account.Description);
-        mockRiskService.Verify(r => r.Evaluate(account), Times.Once);
+        _orgService = new Mock<IOrganizationService>();
+        _tracing = new Mock<ITracingService>();
+        _riskService = new Mock<IRiskService>();
+        _sut = new AccountService(_orgService.Object, _tracing.Object, _riskService.Object);
     }
-    
-    [TestMethod]
-    public void Process_WithLowRevenue_DoesNotMark()
+
+    [Fact]
+    public void Process_RevenueAboveThreshold_MarksStrategicAndEvaluatesRisk()
     {
-        // Arrange
-        var mockOrgService = new Mock<IOrganizationService>();
-        var mockTracingService = new Mock<ITracingService>();
-        var mockRiskService = new Mock<IRiskService>();
-        
-        var account = new Account { Revenue = new Money(3000000) };
-        var service = new AccountService(
-            mockOrgService.Object,
-            mockTracingService.Object,
-            mockRiskService.Object);
-        
-        // Act
-        service.Process(account);
-        
-        // Assert - Should NOT be marked as strategic
-        mockRiskService.Verify(
-            r => r.Evaluate(It.IsAny<Account>()), 
-            Times.Never);
+        var account = new Account
+        {
+            Name = "BigCorp",
+            Revenue = new Money(10_000_000m)
+        };
+
+        _sut.Process(account);
+
+        Assert.Equal(PluginConstants.StrategicCustomerDescription, account.Description);
+        _riskService.Verify(r => r.Evaluate(account), Times.Once);
+    }
+
+    [Fact]
+    public void Process_RiskServiceThrows_ContinuesWithoutRethrowing()
+    {
+        var account = new Account
+        {
+            Name = "RiskyCo",
+            Revenue = new Money(10_000_000m)
+        };
+        _riskService.Setup(r => r.Evaluate(It.IsAny<Account>()))
+            .Throws(new InvalidOperationException("Risk engine failure"));
+
+        // Should NOT throw — risk evaluation is non-critical
+        _sut.Process(account);
+
+        Assert.Equal(PluginConstants.StrategicCustomerDescription, account.Description);
+        _tracing.Verify(
+            t => t.Trace(It.Is<string>(s => s.Contains("Risk evaluation failed"))),
+            Times.Once);
     }
 }
 ```
@@ -517,11 +638,22 @@ public class AccountServiceTests
 
 ## NuGet Dependencies
 
+### Plugin Assembly
+
 | Package | Version | Purpose |
 |---------|---------|---------|
 | Microsoft.CrmSdk.CoreAssemblies | 9.0.2.51 | Dataverse SDK |
 | Microsoft.CrmSdk.Workflow | 9.0.2.42 | Workflow integration |
 | Microsoft.CrmSdk.XrmTooling.CoreAssembly | 9.1.1.65 | XrmTooling services |
+
+### Test Project
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| xUnit | 2.9.3 | Test framework |
+| Moq | 4.20.72 | Mocking library |
+| Castle.Core | 5.1.1 | Moq runtime dependency |
+| xunit.runner.visualstudio | 2.8.2 | VS Test adapter |
 
 ---
 
@@ -537,4 +669,4 @@ public class AccountServiceTests
 
 **⭐ If you find this framework helpful, consider starring the repository!**
 
-*Last Updated: March 2026 | Framework Version: 1.0*
+*Last Updated: March 2026 | Framework Version: 2.0*

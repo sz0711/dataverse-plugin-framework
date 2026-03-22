@@ -9,6 +9,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MODEL", "MODEL\MODEL.shproj
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PLUGIN_INFRASTRUCTURE", "PLUGIN_INFRASTRUCTURE\PLUGIN_INFRASTRUCTURE.shproj", "{B2C3D4E5-F6A7-48B9-8C7D-6E5F4A3B2C1D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataversePluginFramework.Tests", "DataversePluginFramework.Tests\DataversePluginFramework.Tests.csproj", "{F1A2B3C4-D5E6-47F8-9A0B-1C2D3E4F5A6B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{A27B6E92-839E-4E05-BBFA-75937EC36226}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A27B6E92-839E-4E05-BBFA-75937EC36226}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A27B6E92-839E-4E05-BBFA-75937EC36226}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1A2B3C4-D5E6-47F8-9A0B-1C2D3E4F5A6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1A2B3C4-D5E6-47F8-9A0B-1C2D3E4F5A6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1A2B3C4-D5E6-47F8-9A0B-1C2D3E4F5A6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1A2B3C4-D5E6-47F8-9A0B-1C2D3E4F5A6B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

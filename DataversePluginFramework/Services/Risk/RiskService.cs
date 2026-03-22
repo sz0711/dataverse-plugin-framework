@@ -1,6 +1,7 @@
-using MODEL;
-using PluginInfrastructure.Services;
 using Microsoft.Xrm.Sdk;
+using MODEL;
+using PluginInfrastructure.Constants;
+using PluginInfrastructure.Services;
 
 namespace DataversePluginFramework.Services.Risk
 {
@@ -25,7 +26,7 @@ namespace DataversePluginFramework.Services.Risk
 
             // Placeholder for risk evaluation logic
             // In a real scenario, this might query historical data, assess payment history, etc.
-            if (account.Revenue?.Value > 5000000)
+            if (account.Revenue?.Value > PluginConstants.StrategicRevenueThreshold)
             {
                 Trace.Trace($"High-value account risk assessment: {account.Name}");
             }
