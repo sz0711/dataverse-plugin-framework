@@ -1,4 +1,5 @@
 # 🚀 Dataverse Plugin Framework
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license)
 
 > **Enterprise-Grade Plugin Architecture for Microsoft Dataverse/Dynamics 365**  
 > Best practices, clean code, SOLID principles, and dependency injection in action.
